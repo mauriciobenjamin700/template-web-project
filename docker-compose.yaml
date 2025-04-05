@@ -1,0 +1,59 @@
+services:
+
+  database:
+    container_name: database
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+      args:
+        DB_USER: ${DB_USER}
+        DB_PASSWORD: ${DB_PASSWORD}
+        DB_NAME: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      -  database_volume:/var/lib/postgresql/data
+      - ./database/backups:/backups
+    restart: always
+    env_file:
+      - .env
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+    restart: always
+    env_file:
+      - .env
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: always
+    env_file:
+      - .env
+
+  server:
+    container_name: server
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  database_volume:
